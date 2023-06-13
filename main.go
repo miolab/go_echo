@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -12,6 +13,7 @@ func main() {
 
 func getHelloHandler() {
 	e := echo.New()
+	e.Use(middleware.Logger())
 
 	e.GET("/", helloHandler)
 	e.Logger.Fatal(e.Start(":1323"))
