@@ -3,9 +3,16 @@ name: Go Docker Container Build
 on:
   push:
 
+env:
+  SERVICE_NAME: go-echo-sandbox
+  GCP_PROJECT_ID: cloud-run-pray-ground
+  GCP_REGION: asia-northeast2
+  GAR_IMAGE_NAME: asia-northeast2-docker.pkg.dev/cloud-run-pray-ground/go-echo-sandbox/go-echo-sandbox
+  GAR_IMAGE_TAG: ${{ github.sha }}
+
 jobs:
   build:
-    name: Build Container
+    name: Build Container Image
     runs-on: ubuntu-20.04
     steps:
       - name: Init setup
@@ -14,11 +21,32 @@ jobs:
         uses: actions/checkout@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      - name: Build Docker image
-        run: docker build -t go-echo .
-      - name: Run Docker image
+      - name: Cache Docker registry
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: buildx-cache-${{ github.sha }}
+      - name: Build and push Docker Image to Local
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          tags: ${{ env.GAR_IMAGE_NAME }}:${{ env.GAR_IMAGE_TAG }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+  test:
+    name: Test Container Image
+    needs: build
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Cache Docker registry
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: buildx-cache-${{ github.sha }}
+      - name: Run and Test Docker image
         run: |
-          docker run -d --name ci-container -p 1323:1323 go-echo
-          sleep 5
+          docker run -d --name ci-container-${{ env.SERVICE_NAME }} -p 1323:1323 ${{ env.GAR_IMAGE_NAME }}:${{ env.GAR_IMAGE_TAG }}
+          sleep 2
           curl http://localhost:1323
-          docker stop ci-container
+          docker stop ci-container-${{ env.SERVICE_NAME }}
