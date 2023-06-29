@@ -30,10 +30,10 @@ jobs:
             buildx-cache-${{ github.sha }}
             buildx-cache-
       - name: Build Docker image
-        run: docker build -t go-echo .
-      - name: Run Docker image
+        run: docker build -t ${{ env.GAR_IMAGE_NAME }}:${{ env.GAR_IMAGE_TAG }} .
+      - name: Test run and stop Docker image
         run: |
-          docker run -d --name ci-container -p 1323:1323 go-echo
-          sleep 5
+          docker run -d --name ci-container-${{ env.SERVICE_NAME }} -p 1323:1323 ${{ env.GAR_IMAGE_NAME }}:${{ env.GAR_IMAGE_TAG }}
+          sleep 2
           curl http://localhost:1323
-          docker stop ci-container
+          docker stop ci-container-${{ env.SERVICE_NAME }}
