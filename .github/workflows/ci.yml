@@ -3,6 +3,13 @@ name: Go Docker Container Build
 on:
   push:
 
+env:
+  SERVICE_NAME: go-echo-sandbox
+  GCP_PROJECT_ID: cloud-run-pray-ground
+  GCP_REGION: asia-northeast2
+  GAR_IMAGE_NAME: asia-northeast2-docker.pkg.dev/cloud-run-pray-ground/go-echo-sandbox/go-echo-sandbox
+  GAR_IMAGE_TAG: ${{ github.sha }}
+
 jobs:
   build:
     name: Build Container
